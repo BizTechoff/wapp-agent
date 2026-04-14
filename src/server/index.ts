@@ -31,14 +31,18 @@ async function startup() {
     })
   )
 
-  // Remult API
-  app.use(api)
+  // Test endpoint
+  app.get('/api/test', (req, res) => {
+    console.log('TEST endpoint hit!')
+    res.json({ ok: true, time: new Date().toISOString() })
+  })
 
-  // Green-API Webhook endpoint
-  app.post('api/wapp/received', /*'/webhook/greenapi',*/ async (req, res) => {
-    // Step 1: Respond immediately (don't block webhook)
+  // Green-API Webhook endpoint (must be before Remult API)
+  app.post('/api/wapp/received', (req, res) => {
+    console.log('=== WEBHOOK RECEIVED ===')
+    console.log('Headers:', JSON.stringify(req.headers))
+    console.log('Body:', JSON.stringify(req.body))
     res.status(200).send('OK')
-    console.log('WOWWW', JSON.stringify(req.body))
 
     // Step 2: Process asynchronously
     setImmediate(async () => {
@@ -49,6 +53,9 @@ async function startup() {
       }
     })
   })
+
+  // Remult API
+  app.use(api)
 
   // Serve Angular app
   let dist = path.resolve('dist/wapp-agent/browser')
