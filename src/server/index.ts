@@ -1,12 +1,12 @@
-import { config } from 'dotenv'
-config()
-import express from 'express'
-import sslRedirect from 'heroku-ssl-redirect'
-import helmet from 'helmet'
 import compression from 'compression'
 import session from 'cookie-session'
-import path from 'path'
+import { config } from 'dotenv'
+import express from 'express'
 import fs from 'fs'
+import helmet from 'helmet'
+import sslRedirect from 'heroku-ssl-redirect'
+import path from 'path'
+config()
 
 import { api } from './api'
 import { handleGreenApiWebhook } from './webhooks/greenapi.webhook'
@@ -38,6 +38,7 @@ async function startup() {
   app.post('api/wapp/received', /*'/webhook/greenapi',*/ async (req, res) => {
     // Step 1: Respond immediately (don't block webhook)
     res.status(200).send('OK')
+    console.log('WOWWW', JSON.stringify(req.body))
 
     // Step 2: Process asynchronously
     setImmediate(async () => {
