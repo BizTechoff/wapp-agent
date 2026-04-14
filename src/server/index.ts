@@ -10,6 +10,7 @@ config()
 
 import { api } from './api'
 import { handleGreenApiWebhook } from './webhooks/greenapi.webhook'
+import { MessagesController } from '../shared/controllers/MessagesController'
 
 async function startup() {
   const app = express()
@@ -31,11 +32,19 @@ async function startup() {
     })
   )
 
-  // Remult API
-  app.use(api)
-  app.use(api.withRemult)
+  // Explicit send endpoint (before Remult)
+  app.post('/api/send', async (req, res) => {
+    console.log('=== /api/send called ===', req.body)
+    try {
+      const result = await MessagesController.sendMessage(req.body)
+      res.json(result)
+    } catch (error: any) {
+      console.error('Send error:', error.message)
+      res.status(400).json({ error: error.message })
+    }
+  })
 
-  // Green-API Webhook endpoint (must be before Remult API)
+  // Green-API Webhook endpoint
   app.post('/api/wapp/received', async (req, res) => {
     // Step 1: Respond immediately (don't block webhook)
     res.status(200).send('OK')
@@ -50,6 +59,10 @@ async function startup() {
       }
     })
   })
+
+  // Remult API
+  app.use(api)
+  app.use(api.withRemult)
 
   // Serve Angular app
   let dist = path.resolve('dist/wapp-agent/browser')
