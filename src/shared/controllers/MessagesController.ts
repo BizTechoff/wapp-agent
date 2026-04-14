@@ -36,11 +36,12 @@ export class MessagesController {
       throw new Error('No provider configured')
     }
 
-    // 3. Validate sending policy (quota, daily limit, warm-up)
+    // 3. Validate sending policy (quota, daily limit, warm-up, content, hours)
     const validation = await SendingPolicyService.validate(tenant, providerConfig, {
       tenantId: tenant.id,
       mobile: request.mobile,
-      messageCount: 1
+      messageCount: 1,
+      text: request.text  // For content quality check
     })
 
     if (!validation.allowed) {
@@ -105,13 +106,24 @@ export class MessagesController {
       throw new Error('No provider configured')
     }
 
-    // 3. Validate sending policy (handles quota, daily limit, warm-up)
+    // 3. Validate sending policy (handles quota, daily limit, warm-up, spam, content, hours)
     const allMobiles = request.messages.map(m => m.mobile)
+
+    // Check if all messages have the same text (for spam detection)
+    const uniqueTexts = [...new Set(request.messages.map(m => m.text || ''))]
+    const commonText = uniqueTexts.length === 1 ? uniqueTexts[0] : undefined
+
     const validation = await SendingPolicyService.validate(tenant, providerConfig, {
       tenantId: tenant.id,
       mobiles: allMobiles,
-      messageCount: allMobiles.length
+      messageCount: allMobiles.length,
+      text: commonText  // For spam pattern detection (same text to many recipients)
     })
+
+    // Log warnings if any
+    if (validation.warnings && validation.warnings.length > 0) {
+      console.warn('SendingPolicy warnings:', validation.warnings)
+    }
 
     // Get allowed messages based on daily limit filtering
     const allowedMobilesSet = new Set(validation.allowedMobiles || allMobiles)
@@ -176,7 +188,8 @@ export class MessagesController {
       queued,
       blocked: blockedMobiles.length,
       blockedMobiles,
-      warmupInfo: validation.warmupInfo
+      warmupInfo: validation.warmupInfo,
+      warnings: validation.warnings
     }
   }
 
@@ -248,6 +261,7 @@ interface ApiBulkSendResponse {
     sentToday: number
     remaining: number
   }
+  warnings?: string[]
 }
 
 interface MessageStatusResponse {

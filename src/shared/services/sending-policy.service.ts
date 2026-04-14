@@ -5,6 +5,7 @@ import { remult } from 'remult'
 import { Tenant } from '../../app/tenants/tenant'
 import { ProviderConfig } from '../../app/providers/provider-config'
 import { MessageRequest } from '../../app/messages/message-request'
+import { MessageStatus } from '../enums/MessageStatus'
 
 // =====================
 // Configuration
@@ -21,6 +22,41 @@ const WARMUP_LEVELS = [
   // After 30 days: No warm-up limit (tenant quota applies)
 ]
 
+// Spam pattern detection thresholds
+const SPAM_THRESHOLDS = {
+  WARNING: 20,    // 20-50 recipients with same text = warning
+  BLOCK: 50       // 50+ recipients with same text = block
+}
+
+// Sending hours (Israel timezone UTC+2/+3)
+const SENDING_HOURS = {
+  START: 8,       // 08:00
+  END: 22         // 22:00
+}
+
+// Problematic recipient thresholds
+const PROBLEMATIC_RECIPIENT = {
+  FAIL_COUNT: 3,           // 3+ failures = problematic
+  DAYS_TO_CHECK: 7         // Check failures in last 7 days
+}
+
+// Content quality checks
+const CONTENT_LIMITS = {
+  MAX_EMOJIS: 10,                    // Max emojis per message
+  MAX_LINKS: 3,                       // Max links per message
+  SUSPICIOUS_PATTERNS: [
+    /bit\.ly/i,
+    /tinyurl/i,
+    /goo\.gl/i,
+    /短/,                             // Chinese URL shorteners
+    /免费|赚钱|中奖/,                  // Chinese spam words
+    /\$\$\$+/,                        // Multiple dollar signs
+    /WIN FREE/i,
+    /CLICK HERE NOW/i,
+    /LIMITED TIME OFFER/i
+  ]
+}
+
 // =====================
 // Types
 // =====================
@@ -30,6 +66,8 @@ export interface PolicyValidationRequest {
   mobile?: string           // For single message
   mobiles?: string[]        // For bulk messages
   messageCount?: number     // How many messages to send
+  text?: string             // Message text (for spam/content checks)
+  texts?: string[]          // Multiple texts (for bulk with different texts)
 }
 
 export interface PolicyValidationResult {
@@ -46,6 +84,8 @@ export interface PolicyValidationResult {
     sentToday: number
     remaining: number
   }
+  // Warnings (not blocking, but logged)
+  warnings?: string[]
 }
 
 export type PolicyErrorCode =
@@ -54,6 +94,10 @@ export type PolicyErrorCode =
   | 'WARMUP_LIMIT_REACHED'
   | 'SENDING_DISABLED'
   | 'NO_PROVIDER'
+  | 'SPAM_DETECTED'
+  | 'OUTSIDE_SENDING_HOURS'
+  | 'PROBLEMATIC_RECIPIENT'
+  | 'CONTENT_VIOLATION'
 
 // Internal check result
 interface CheckResult {
@@ -61,6 +105,7 @@ interface CheckResult {
   reason?: string
   code?: PolicyErrorCode
   data?: any
+  warning?: string
 }
 
 // =====================
@@ -82,6 +127,7 @@ export class SendingPolicyService {
     providerConfig: ProviderConfig,
     request: PolicyValidationRequest
   ): Promise<PolicyValidationResult> {
+    const warnings: string[] = []
 
     // 1. Check if sending is enabled
     const canSendCheck = this.checkCanSend(tenant)
@@ -89,7 +135,35 @@ export class SendingPolicyService {
       return { allowed: false, reason: canSendCheck.reason, code: canSendCheck.code }
     }
 
-    // 2. Check warm-up limit
+    // 2. Check sending hours
+    const hoursCheck = this.checkSendingHours()
+    if (!hoursCheck.passed) {
+      return { allowed: false, reason: hoursCheck.reason, code: hoursCheck.code }
+    }
+
+    // 3. Check content quality (if text provided)
+    if (request.text) {
+      const contentCheck = this.checkContentQuality(request.text)
+      if (!contentCheck.passed) {
+        return { allowed: false, reason: contentCheck.reason, code: contentCheck.code }
+      }
+      if (contentCheck.warning) {
+        warnings.push(contentCheck.warning)
+      }
+    }
+
+    // 4. Check spam pattern (for bulk sends)
+    if (request.mobiles && request.mobiles.length > 0 && request.text) {
+      const spamCheck = this.checkSpamPattern(request.mobiles.length, request.text)
+      if (!spamCheck.passed) {
+        return { allowed: false, reason: spamCheck.reason, code: spamCheck.code }
+      }
+      if (spamCheck.warning) {
+        warnings.push(spamCheck.warning)
+      }
+    }
+
+    // 5. Check warm-up limit
     const warmupCheck = await this.checkWarmup(tenant.id, providerConfig, request.messageCount || 1)
     if (!warmupCheck.passed) {
       return {
@@ -100,36 +174,45 @@ export class SendingPolicyService {
       }
     }
 
-    // 3. Check quota
+    // 6. Check quota
     const quotaCheck = this.checkQuota(tenant, request.messageCount || 1)
     if (!quotaCheck.passed) {
       return { allowed: false, reason: quotaCheck.reason, code: quotaCheck.code }
     }
 
-    // 4. Check daily limit per recipient
+    // 7. Check daily limit per recipient + problematic recipients
     if (request.mobile) {
-      // Single message
+      // Single message - check problematic recipient
+      const problematicCheck = await this.checkProblematicRecipient(tenant.id, request.mobile)
+      if (!problematicCheck.passed) {
+        return { allowed: false, reason: problematicCheck.reason, code: problematicCheck.code }
+      }
+
+      // Check daily limit
       const dailyCheck = await this.checkDailyLimit(tenant.id, request.mobile)
       if (!dailyCheck.passed) {
         return { allowed: false, reason: dailyCheck.reason, code: dailyCheck.code }
       }
     } else if (request.mobiles && request.mobiles.length > 0) {
-      // Bulk messages
-      const bulkCheck = await this.checkDailyLimitBulk(tenant.id, request.mobiles)
+      // Bulk messages - filter problematic + daily limit
+      const bulkCheck = await this.checkBulkRecipients(tenant.id, request.mobiles)
+
       return {
         allowed: bulkCheck.data.allowedMobiles.length > 0,
         reason: bulkCheck.data.blockedMobiles.length > 0
-          ? `${bulkCheck.data.blockedMobiles.length} recipients blocked due to daily limit`
+          ? `${bulkCheck.data.blockedMobiles.length} recipients blocked`
           : undefined,
         blockedMobiles: bulkCheck.data.blockedMobiles,
         allowedMobiles: bulkCheck.data.allowedMobiles,
-        warmupInfo: warmupCheck.data?.warmupInfo
+        warmupInfo: warmupCheck.data?.warmupInfo,
+        warnings: warnings.length > 0 ? warnings : undefined
       }
     }
 
     return {
       allowed: true,
-      warmupInfo: warmupCheck.data?.warmupInfo
+      warmupInfo: warmupCheck.data?.warmupInfo,
+      warnings: warnings.length > 0 ? warnings : undefined
     }
   }
 
@@ -152,6 +235,25 @@ export class SendingPolicyService {
   }
 
   /**
+   * Check if current time is within allowed sending hours
+   */
+  private static checkSendingHours(): CheckResult {
+    const now = new Date()
+    // Israel timezone (UTC+2 or UTC+3 during DST)
+    const israelTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Jerusalem' }))
+    const hour = israelTime.getHours()
+
+    if (hour < SENDING_HOURS.START || hour >= SENDING_HOURS.END) {
+      return {
+        passed: false,
+        reason: `Sending allowed only between ${SENDING_HOURS.START}:00-${SENDING_HOURS.END}:00. Current time: ${hour}:${israelTime.getMinutes().toString().padStart(2, '0')}`,
+        code: 'OUTSIDE_SENDING_HOURS'
+      }
+    }
+    return { passed: true }
+  }
+
+  /**
    * Check if tenant has enough quota
    */
   private static checkQuota(tenant: Tenant, messageCount: number): CheckResult {
@@ -163,6 +265,99 @@ export class SendingPolicyService {
         code: 'QUOTA_EXCEEDED'
       }
     }
+    return { passed: true }
+  }
+
+  /**
+   * Check for spam patterns - same text to many recipients
+   */
+  private static checkSpamPattern(recipientCount: number, text: string): CheckResult {
+    if (recipientCount >= SPAM_THRESHOLDS.BLOCK) {
+      return {
+        passed: false,
+        reason: `Spam pattern detected: Same message to ${recipientCount} recipients (limit: ${SPAM_THRESHOLDS.BLOCK}). Consider personalizing messages.`,
+        code: 'SPAM_DETECTED'
+      }
+    }
+
+    if (recipientCount >= SPAM_THRESHOLDS.WARNING) {
+      return {
+        passed: true,
+        warning: `Warning: Same message to ${recipientCount} recipients. Consider personalizing to avoid WhatsApp restrictions.`
+      }
+    }
+
+    return { passed: true }
+  }
+
+  /**
+   * Check content quality - suspicious links, too many emojis, spam words
+   */
+  private static checkContentQuality(text: string): CheckResult {
+    // Check for suspicious patterns
+    for (const pattern of CONTENT_LIMITS.SUSPICIOUS_PATTERNS) {
+      if (pattern.test(text)) {
+        return {
+          passed: false,
+          reason: `Content contains suspicious pattern. Message may be flagged as spam.`,
+          code: 'CONTENT_VIOLATION'
+        }
+      }
+    }
+
+    // Count emojis (simplified - counts emoji-like unicode ranges)
+    const emojiCount = (text.match(/[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu) || []).length
+    if (emojiCount > CONTENT_LIMITS.MAX_EMOJIS) {
+      return {
+        passed: false,
+        reason: `Too many emojis (${emojiCount}). Maximum allowed: ${CONTENT_LIMITS.MAX_EMOJIS}`,
+        code: 'CONTENT_VIOLATION'
+      }
+    }
+
+    // Count links
+    const linkCount = (text.match(/https?:\/\/[^\s]+/gi) || []).length
+    if (linkCount > CONTENT_LIMITS.MAX_LINKS) {
+      return {
+        passed: false,
+        reason: `Too many links (${linkCount}). Maximum allowed: ${CONTENT_LIMITS.MAX_LINKS}`,
+        code: 'CONTENT_VIOLATION'
+      }
+    }
+
+    // Warning for multiple links (but allow)
+    if (linkCount > 1) {
+      return {
+        passed: true,
+        warning: `Message contains ${linkCount} links. Multiple links may increase spam risk.`
+      }
+    }
+
+    return { passed: true }
+  }
+
+  /**
+   * Check if recipient is problematic (too many failures)
+   */
+  private static async checkProblematicRecipient(tenantId: string, mobile: string): Promise<CheckResult> {
+    const daysAgo = new Date()
+    daysAgo.setDate(daysAgo.getDate() - PROBLEMATIC_RECIPIENT.DAYS_TO_CHECK)
+
+    const failCount = await remult.repo(MessageRequest).count({
+      tenantId,
+      mobile,
+      status: MessageStatus.failed,
+      createDate: { $gte: daysAgo }
+    })
+
+    if (failCount >= PROBLEMATIC_RECIPIENT.FAIL_COUNT) {
+      return {
+        passed: false,
+        reason: `Recipient ${mobile} has ${failCount} failed messages in the last ${PROBLEMATIC_RECIPIENT.DAYS_TO_CHECK} days. Consider removing from list.`,
+        code: 'PROBLEMATIC_RECIPIENT'
+      }
+    }
+
     return { passed: true }
   }
 
@@ -182,21 +377,34 @@ export class SendingPolicyService {
   }
 
   /**
-   * Check daily limit for multiple recipients (bulk)
-   * Returns which mobiles are allowed and which are blocked
+   * Check bulk recipients - combines daily limit + problematic check
    */
-  private static async checkDailyLimitBulk(
+  private static async checkBulkRecipients(
     tenantId: string,
     mobiles: string[]
   ): Promise<CheckResult> {
     const uniqueMobiles = [...new Set(mobiles)]
+
+    // Get daily counts
     const dailyCounts = await this.getDailyCounts(tenantId, uniqueMobiles)
+
+    // Get problematic recipients
+    const problematicMobiles = await this.getProblematicRecipients(tenantId, uniqueMobiles)
 
     const batchCounts = new Map<string, number>()
     const blockedMobiles: string[] = []
     const allowedMobiles: string[] = []
 
     for (const mobile of mobiles) {
+      // Check if problematic
+      if (problematicMobiles.has(mobile)) {
+        if (!blockedMobiles.includes(mobile)) {
+          blockedMobiles.push(mobile)
+        }
+        continue
+      }
+
+      // Check daily limit
       const existingToday = dailyCounts.get(mobile) || 0
       const addedInBatch = batchCounts.get(mobile) || 0
       const totalAfterThis = existingToday + addedInBatch + 1
@@ -212,14 +420,13 @@ export class SendingPolicyService {
     }
 
     return {
-      passed: true, // Always passes, but returns filtered lists
+      passed: true,
       data: { allowedMobiles, blockedMobiles }
     }
   }
 
   /**
    * Check warm-up limit for new phone numbers
-   * New numbers start with low limits that increase over time
    */
   private static async checkWarmup(
     tenantId: string,
@@ -229,14 +436,13 @@ export class SendingPolicyService {
     const daysSinceCreation = this.getDaysSinceCreation(providerConfig.createDate)
     const dailyLimit = this.getWarmupDailyLimit(daysSinceCreation)
 
-    // If no warm-up limit (phone is mature), pass
     if (dailyLimit === null) {
       return {
         passed: true,
         data: {
           warmupInfo: {
             daysSinceCreation,
-            currentDailyLimit: -1, // -1 means no limit
+            currentDailyLimit: -1,
             sentToday: 0,
             remaining: -1
           }
@@ -244,7 +450,6 @@ export class SendingPolicyService {
       }
     }
 
-    // Count messages sent today by this provider
     const sentToday = await this.getProviderMessageCountToday(tenantId, providerConfig.id)
     const remaining = dailyLimit - sentToday
 
@@ -319,9 +524,38 @@ export class SendingPolicyService {
     return counts
   }
 
+  private static async getProblematicRecipients(tenantId: string, mobiles: string[]): Promise<Set<string>> {
+    const daysAgo = new Date()
+    daysAgo.setDate(daysAgo.getDate() - PROBLEMATIC_RECIPIENT.DAYS_TO_CHECK)
+
+    const failedMessages = await remult.repo(MessageRequest).find({
+      where: {
+        tenantId,
+        mobile: { $in: mobiles },
+        status: MessageStatus.failed,
+        createDate: { $gte: daysAgo }
+      }
+    })
+
+    // Count failures per mobile
+    const failCounts = new Map<string, number>()
+    for (const msg of failedMessages) {
+      failCounts.set(msg.mobile, (failCounts.get(msg.mobile) || 0) + 1)
+    }
+
+    // Return mobiles with too many failures
+    const problematic = new Set<string>()
+    for (const [mobile, count] of failCounts.entries()) {
+      if (count >= PROBLEMATIC_RECIPIENT.FAIL_COUNT) {
+        problematic.add(mobile)
+      }
+    }
+
+    return problematic
+  }
+
   private static async getProviderMessageCountToday(tenantId: string, providerConfigId: string): Promise<number> {
     const startOfDay = this.getStartOfToday()
-    // Count all messages sent by this tenant today (provider-level limit)
     return await remult.repo(MessageRequest).count({
       tenantId,
       createDate: { $gte: startOfDay }
@@ -332,7 +566,7 @@ export class SendingPolicyService {
     const now = new Date()
     const diffTime = now.getTime() - createDate.getTime()
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
-    return diffDays + 1 // Day 1 is the first day
+    return diffDays + 1
   }
 
   private static getWarmupDailyLimit(daysSinceCreation: number): number | null {
@@ -341,7 +575,6 @@ export class SendingPolicyService {
         return level.dailyLimit
       }
     }
-    // After all warm-up levels, no limit
     return null
   }
 
@@ -355,5 +588,21 @@ export class SendingPolicyService {
 
   static getMaxMessagesPerRecipientPerDay() {
     return MAX_MESSAGES_PER_RECIPIENT_PER_DAY
+  }
+
+  static getSpamThresholds() {
+    return SPAM_THRESHOLDS
+  }
+
+  static getSendingHours() {
+    return SENDING_HOURS
+  }
+
+  static getContentLimits() {
+    return CONTENT_LIMITS
+  }
+
+  static getProblematicRecipientConfig() {
+    return PROBLEMATIC_RECIPIENT
   }
 }
