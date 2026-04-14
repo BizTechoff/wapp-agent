@@ -78,6 +78,9 @@ export async function handleGreenApiWebhook(body: any): Promise<void> {
       if (body.status === 'delivered') message.deliveredDate = new Date()
       if (body.status === 'read') message.readDate = new Date()
       await message.save()  // LiveQuery auto-push to clients
+      console.log(`Message ${body.idMessage} status updated to: ${body.status}`)
+    } else {
+      console.warn(`Message not found for idMessage: ${body.idMessage}`)
     }
   }
 
