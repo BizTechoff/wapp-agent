@@ -14,14 +14,16 @@ export class MessagesService {
   async getOutgoingMessages(limit = 100) {
     return await this.outgoingRepo.find({
       orderBy: { createDate: 'desc' },
-      limit
+      limit,
+      include: { tenant: true }
     })
   }
 
   async getIncomingMessages(limit = 100) {
     return await this.incomingRepo.find({
       orderBy: { receivedDate: 'desc' },
-      limit
+      limit,
+      include: { tenant: true }
     })
   }
 

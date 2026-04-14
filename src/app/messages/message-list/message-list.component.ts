@@ -54,7 +54,8 @@ export class MessageListComponent implements OnInit, OnDestroy {
     this.subscription = remult.repo(MessageRequest)
       .liveQuery({
         orderBy: { createDate: 'desc' },
-        limit: 100
+        limit: 100,
+        include: { tenant: true }
       })
       .subscribe(info => {
         this.outgoingMessages = info.applyChanges(this.outgoingMessages)

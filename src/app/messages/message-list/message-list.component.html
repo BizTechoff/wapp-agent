@@ -24,10 +24,14 @@
       [totalRecords]="outgoingMessages.length"
       [showPagination]="false"
       [showAdd]="false"
-      [hiddenColumns]="['id', 'tenantId', 'batchId', 'providerMessageId', 'providerType', 'deliveredDate', 'readDate', 'errorMessage']"
+      [hiddenColumns]="['id', 'tenant', 'batchId', 'providerMessageId', 'providerType', 'deliveredDate', 'errorMessage']"
       (onEdit)="viewOutgoing($event)"
       (onDelete)="deleteOutgoing($event)"
       (onRefresh)="loadMessages()">
+
+      <ng-template appTableColumn field="tenantId" header="לקוח" let-row>
+        {{ row.tenant?.name }}
+      </ng-template>
 
       <ng-template appTableColumn field="status" header="סטטוס" let-row>
         <span [class]="getStatusClass(row.status)">
@@ -52,10 +56,14 @@
       [totalRecords]="incomingMessages.length"
       [showPagination]="false"
       [showAdd]="false"
-      [hiddenColumns]="['id', 'tenantId', 'providerMessageId', 'mediaUrl', 'callbackSent', 'callbackSentDate', 'callbackError']"
+      [hiddenColumns]="['id', 'tenant', 'providerMessageId', 'mediaUrl', 'callbackSent', 'callbackSentDate', 'callbackError']"
       (onEdit)="viewIncoming($event)"
       (onDelete)="deleteIncoming($event)"
       (onRefresh)="loadMessages()">
+
+      <ng-template appTableColumn field="tenantId" header="לקוח" let-row>
+        {{ row.tenant?.name }}
+      </ng-template>
 
       <ng-template appTableColumn field="isRead" header="נקראה" let-row>
         <span [class.unread]="!row.isRead" [class.read]="row.isRead">

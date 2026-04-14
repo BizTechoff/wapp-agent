@@ -21,7 +21,8 @@ export class IncomingMessage extends IdEntity {
   tenantId = ''
 
   @Relations.toOne(() => Tenant, {
-    caption: terms.tenant
+    caption: terms.tenant,
+    field: 'tenantId'
   })
   tenant!: Tenant
 
