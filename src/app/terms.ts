@@ -1,0 +1,138 @@
+export const terms = {
+  // General
+  username: 'שם משתמש',
+  signIn: 'כניסה',
+  confirmPassword: 'אימות סיסמה',
+  signUp: 'הרשמה',
+  doesNotMatchPassword: 'לא תואם לסיסמה',
+  password: 'סיסמה',
+  updateInfo: 'עדכון פרטים',
+  changePassword: 'שינוי סיסמה',
+  hello: 'שלום',
+  invalidOperation: 'פעולה לא חוקית',
+  admin: 'אדמין',
+  manager: 'מנהל',
+  disabled: 'לא פעיל',
+  yes: 'כן',
+  no: 'לא',
+  ok: 'אישור',
+  areYouSureYouWouldLikeToDelete: 'האם ברצונך למחוק את',
+  cancel: 'ביטול',
+  close: 'סגור',
+  home: 'דף הבית',
+  userAccounts: 'משתמשים',
+  invalidSignIn: 'פרטי התחברות שגויים',
+  signOut: 'יציאה',
+  resetPassword: 'איפוס סיסמה',
+  passwordDeletedSuccessful: 'הסיסמה נמחקה בהצלחה',
+  passwordDeleteConfirmOf: 'האם ברצונך למחוק את הסיסמה של',
+  rememberOnThisDevice: 'זכור אותי במכשיר זה',
+  RTL: true,
+  requiredFiled: 'שדה חובה',
+  uniqueFiled: 'קיים כבר',
+  createDate: 'תאריך יצירה',
+
+  // Common fields
+  name: 'שם',
+  description: 'תיאור',
+  active: 'פעיל',
+  inactive: 'לא פעיל',
+  isActive: 'פעיל',
+  status: 'סטטוס',
+  search: 'חיפוש',
+  total: 'סה"כ',
+
+  // Dashboard
+  dashboard: 'לוח בקרה',
+  live: 'חי',
+  totalMessages: 'סה"כ הודעות',
+  sent: 'נשלח',
+  delivered: 'הגיע',
+  read: 'נקרא',
+  failed: 'נכשל',
+  pending: 'ממתין',
+  queued: 'בתור',
+  sending: 'בשליחה',
+  successRate: 'אחוז הצלחה',
+  last24Hours: '24 שעות אחרונות',
+  recentFailures: 'כשלונות אחרונים',
+
+  // Tenants module
+  tenants: 'לקוחות',
+  tenant: 'לקוח',
+  tenantName: 'שם לקוח',
+  apiKey: 'מפתח API',
+  messageQuota: 'מכסת הודעות',
+  messagesSent: 'הודעות שנשלחו',
+  canSend: 'שליחת הודעות',
+  canReceive: 'קבלת הודעות',
+  incomingWebhookUrl: 'כתובת Webhook להודעות נכנסות',
+  addTenant: 'הוסף לקוח',
+  generateApiKey: 'יצירת מפתח API',
+
+  // Messages module
+  messages: 'הודעות',
+  message: 'הודעה',
+  messageText: 'טקסט הודעה',
+  mobile: 'מספר נייד',
+  sentDate: 'תאריך שליחה',
+  deliveredDate: 'תאריך הגעה',
+  readDate: 'תאריך קריאה',
+  errorMessage: 'שגיאה',
+  batchId: 'מזהה אצווה',
+  providerMessageId: 'מזהה הודעה בספק',
+  outgoingMessages: 'הודעות יוצאות',
+  incomingMessages: 'הודעות נכנסות',
+  receivedDate: 'תאריך קבלה',
+  callbackSent: 'Callback נשלח',
+  callbackSentDate: 'תאריך שליחת Callback',
+  callbackError: 'שגיאת Callback',
+  isRead: 'נקראה',
+
+  // Message Status
+  messageStatusQueued: 'בתור',
+  messageStatusSending: 'בשליחה',
+  messageStatusSent: 'נשלח',
+  messageStatusDelivered: 'הגיע',
+  messageStatusRead: 'נקרא',
+  messageStatusFailed: 'נכשל',
+
+  // Provider types
+  providerType: 'סוג ספק',
+  greenApi: 'Green-API',
+  metaApi: 'Meta WhatsApp API',
+
+  // Providers module
+  providers: 'ספקים',
+  provider: 'ספק',
+  providerConfig: 'הגדרות ספק',
+  instanceId: 'מזהה Instance',
+  apiToken: 'API Token',
+  phoneNumber: 'מספר טלפון',
+  displayName: 'שם לתצוגה',
+  isDefault: 'ברירת מחדל',
+  addProvider: 'הוסף ספק',
+
+  // File types
+  fileType: 'סוג קובץ',
+  image: 'תמונה',
+  document: 'מסמך',
+  audio: 'אודיו',
+  video: 'וידאו',
+
+  // Message types
+  messageType: 'סוג הודעה',
+  text: 'טקסט',
+  location: 'מיקום',
+  contact: 'איש קשר',
+
+  // Foreign keys
+  tenantId: 'לקוח',
+  messageRequestId: 'בקשת הודעה',
+
+  // Actions
+  send: 'שלח',
+  sendBulk: 'שליחה מרובה',
+  retry: 'נסה שוב',
+  refresh: 'רענון'
+}

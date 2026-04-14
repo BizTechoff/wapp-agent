@@ -1,0 +1,72 @@
+<div class="messages-container">
+  <div class="tabs">
+    <button
+      mat-button
+      [class.active]="activeTab === 'outgoing'"
+      (click)="switchTab('outgoing')">
+      📤 {{ terms.outgoingMessages }}
+    </button>
+    <button
+      mat-button
+      [class.active]="activeTab === 'incoming'"
+      (click)="switchTab('incoming')">
+      📥 {{ terms.incomingMessages }}
+    </button>
+  </div>
+
+  <!-- Outgoing Messages -->
+  <div *ngIf="activeTab === 'outgoing'">
+    <app-base-table
+      [title]="terms.outgoingMessages"
+      [data]="outgoingMessages"
+      [entityType]="MessageRequest"
+      [loading]="loading"
+      [totalRecords]="outgoingMessages.length"
+      [showPagination]="false"
+      [showAdd]="false"
+      [hiddenColumns]="['id', 'tenantId', 'batchId', 'providerMessageId', 'providerType', 'deliveredDate', 'readDate', 'errorMessage']"
+      (onEdit)="viewOutgoing($event)"
+      (onDelete)="deleteOutgoing($event)"
+      (onRefresh)="loadMessages()">
+
+      <ng-template appTableColumn field="status" header="סטטוס" let-row>
+        <span [class]="getStatusClass(row.status)">
+          {{ row.status?.caption }}
+        </span>
+      </ng-template>
+
+      <ng-template appTableColumn field="text" header="הודעה" let-row>
+        <span class="text-preview">{{ row.text | slice:0:50 }}{{ row.text?.length > 50 ? '...' : '' }}</span>
+      </ng-template>
+
+    </app-base-table>
+  </div>
+
+  <!-- Incoming Messages -->
+  <div *ngIf="activeTab === 'incoming'">
+    <app-base-table
+      [title]="terms.incomingMessages"
+      [data]="incomingMessages"
+      [entityType]="IncomingMessage"
+      [loading]="loading"
+      [totalRecords]="incomingMessages.length"
+      [showPagination]="false"
+      [showAdd]="false"
+      [hiddenColumns]="['id', 'tenantId', 'providerMessageId', 'mediaUrl', 'callbackSent', 'callbackSentDate', 'callbackError']"
+      (onEdit)="viewIncoming($event)"
+      (onDelete)="deleteIncoming($event)"
+      (onRefresh)="loadMessages()">
+
+      <ng-template appTableColumn field="isRead" header="נקראה" let-row>
+        <span [class.unread]="!row.isRead" [class.read]="row.isRead">
+          {{ row.isRead ? '✓' : '●' }}
+        </span>
+      </ng-template>
+
+      <ng-template appTableColumn field="text" header="הודעה" let-row>
+        <span class="text-preview">{{ row.text | slice:0:50 }}{{ row.text?.length > 50 ? '...' : '' }}</span>
+      </ng-template>
+
+    </app-base-table>
+  </div>
+</div>

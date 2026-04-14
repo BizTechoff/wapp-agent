@@ -1,0 +1,39 @@
+<div class="base-input-field" [class.focused]="isFocused" [class.has-value]="hasValue" [class.select-field]="type === 'select'">
+  <label [class.floating]="shouldFloatLabel">
+    {{ label }}
+    <span *ngIf="required" class="required-marker">*</span>
+  </label>
+  <textarea
+    *ngIf="type === 'textarea'"
+    #textareaEl
+    [value]="value"
+    [disabled]="disabled"
+    [required]="required"
+    [rows]="rows"
+    [attr.maxlength]="maxLength"
+    (input)="onInput($event); autoResize()"
+    (focus)="onFocus()"
+    (blur)="onBlur()"
+  ></textarea>
+  <select
+    *ngIf="type === 'select'"
+    [value]="selectValue"
+    [disabled]="disabled"
+    [required]="required"
+    (change)="onSelect($event)"
+    (focus)="onFocus()"
+    (blur)="onBlur()">
+    <option value="" disabled hidden></option>
+    <option *ngFor="let opt of options" [value]="opt.id">{{ opt.caption }}</option>
+  </select>
+  <input
+    *ngIf="type !== 'textarea' && type !== 'select'"
+    [type]="type"
+    [value]="value"
+    [disabled]="disabled"
+    [required]="required"
+    (input)="onInput($event)"
+    (focus)="onFocus()"
+    (blur)="onBlur()"
+  />
+</div>

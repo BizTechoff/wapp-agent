@@ -1,0 +1,97 @@
+<h2 mat-dialog-title>
+  {{ isIncoming ? '📥 הודעה נכנסת' : '📤 הודעה יוצאת' }}
+</h2>
+
+<mat-dialog-content>
+  <!-- Outgoing Message -->
+  <div class="details-container" *ngIf="!isIncoming && message">
+    <div class="detail-row">
+      <span class="label">{{ terms.mobile }}:</span>
+      <span class="value mobile">{{ message.mobile }}</span>
+    </div>
+
+    <div class="detail-row">
+      <span class="label">{{ terms.status }}:</span>
+      <span class="value" [class]="getStatusClass(message.status)">{{ message.status?.caption }}</span>
+    </div>
+
+    <div class="detail-row" *ngIf="message.errorMessage">
+      <span class="label">{{ terms.errorMessage }}:</span>
+      <span class="value error">{{ message.errorMessage }}</span>
+    </div>
+
+    <div class="detail-row">
+      <span class="label">{{ terms.messageText }}:</span>
+    </div>
+    <div class="message-text">{{ message.text }}</div>
+
+    <div class="timestamps">
+      <div class="detail-row">
+        <span class="label">{{ terms.createDate }}:</span>
+        <span class="value">{{ formatDate(message.createDate) }}</span>
+      </div>
+      <div class="detail-row" *ngIf="message.sentDate">
+        <span class="label">{{ terms.sentDate }}:</span>
+        <span class="value">{{ formatDate(message.sentDate) }}</span>
+      </div>
+      <div class="detail-row" *ngIf="message.deliveredDate">
+        <span class="label">{{ terms.deliveredDate }}:</span>
+        <span class="value">{{ formatDate(message.deliveredDate) }}</span>
+      </div>
+      <div class="detail-row" *ngIf="message.readDate">
+        <span class="label">{{ terms.readDate }}:</span>
+        <span class="value">{{ formatDate(message.readDate) }}</span>
+      </div>
+    </div>
+
+    <div class="detail-row" *ngIf="message.providerMessageId">
+      <span class="label">{{ terms.providerMessageId }}:</span>
+      <span class="value code">{{ message.providerMessageId }}</span>
+    </div>
+  </div>
+
+  <!-- Incoming Message -->
+  <div class="details-container" *ngIf="isIncoming && incomingMessage">
+    <div class="detail-row">
+      <span class="label">{{ terms.mobile }}:</span>
+      <span class="value mobile">{{ incomingMessage.mobile }}</span>
+    </div>
+
+    <div class="detail-row">
+      <span class="label">{{ terms.messageType }}:</span>
+      <span class="value">{{ incomingMessage.messageType?.caption }}</span>
+    </div>
+
+    <div class="detail-row">
+      <span class="label">{{ terms.messageText }}:</span>
+    </div>
+    <div class="message-text">{{ incomingMessage.text }}</div>
+
+    <div class="detail-row" *ngIf="incomingMessage.mediaUrl">
+      <span class="label">Media URL:</span>
+      <a [href]="incomingMessage.mediaUrl" target="_blank" class="value link">צפייה במדיה</a>
+    </div>
+
+    <div class="detail-row">
+      <span class="label">{{ terms.receivedDate }}:</span>
+      <span class="value">{{ formatDate(incomingMessage.receivedDate) }}</span>
+    </div>
+
+    <div class="callback-info" *ngIf="incomingMessage.callbackSent || incomingMessage.callbackError">
+      <div class="detail-row">
+        <span class="label">{{ terms.callbackSent }}:</span>
+        <span class="value" [class.status-success]="incomingMessage.callbackSent" [class.status-failed]="!incomingMessage.callbackSent">
+          {{ incomingMessage.callbackSent ? '✓' : '✗' }}
+        </span>
+      </div>
+      <div class="detail-row" *ngIf="incomingMessage.callbackError">
+        <span class="label">{{ terms.callbackError }}:</span>
+        <span class="value error">{{ incomingMessage.callbackError }}</span>
+      </div>
+    </div>
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-raised-button color="primary" (click)="close()">{{ terms.close }}</button>
+</mat-dialog-actions>

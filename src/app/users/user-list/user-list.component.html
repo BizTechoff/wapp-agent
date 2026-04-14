@@ -1,0 +1,62 @@
+<div class="list-container">
+  <!-- <div class="header">
+    <button class="toggle-mode-btn" (click)="toggleQueryMode()">
+      {{ useLiveQuery ? '🔴 Live Mode' : '⚪ Regular Mode' }}
+    </button>
+  </div> -->
+
+  <app-base-table
+    [title]="'ניהול משתמשים'"
+    [data]="users"
+    [entityType]="userEntity"
+    [loading]="loading"
+    [totalRecords]="totalRecords"
+    [currentPage]="currentPage"
+    [pageSize]="pageSize"
+    [sortable]="true"
+    [showFilter]="true"
+    [showPagination]="true"
+    [showActions]="isAdmin()"
+    [showAdd]="isAdmin()"
+    [readonly]="!isAdmin()"
+    [addButtonText]="'הוסף משתמש'"
+    (onSort)="onSort($event)"
+    (onFilter)="onFilter($event)"
+    (onPageChange)="onPageChange($event)"
+    (onRefresh)="onRefresh()"
+    (onAdd)="addUser()"
+    (onEdit)="editUser($event)"
+    (onRowClick)="editUser($event)"
+    (onDelete)="deleteUser($event)"
+    [hiddenColumns]="['id', 'password']"
+  >
+    <!-- Custom column for admin status -->
+    <ng-template appTableColumn="admin" header="מנהל" let-row>
+      <span [style.color]="row.admin ? 'green' : 'gray'">
+        {{ row.admin ? '✓' : '✗' }}
+      </span>
+    </ng-template>
+
+    <!-- Custom column for manager status -->
+    <ng-template appTableColumn="manager" header="מנהל" let-row>
+      <span [style.color]="row.manager ? 'blue' : 'gray'">
+        {{ row.manager ? '✓' : '✗' }}
+      </span>
+    </ng-template>
+
+    <!-- Custom column for disabled status -->
+    <ng-template appTableColumn="disabled" header="מושבת" let-row>
+      <span [style.color]="row.disabled ? 'red' : 'green'">
+        {{ row.disabled ? 'מושבת' : 'פעיל' }}
+      </span>
+    </ng-template>
+
+    <!-- Custom column for disabled status -->
+    <ng-template appTableColumn="createDate" header="תאריך יצירה" let-row>
+      <span>
+        {{ row.createDate | date: 'HH:mm dd/MM/yyyy' }}
+      </span>
+    </ng-template>
+    
+  </app-base-table>
+</div>

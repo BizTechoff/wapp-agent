@@ -1,0 +1,77 @@
+<h2 mat-dialog-title>{{ isNew ? terms.addProvider : config.displayName || config.instanceId }}</h2>
+
+<mat-dialog-content>
+  <div class="form-container" *ngIf="config">
+    <!-- Tenant Selection -->
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>{{ terms.tenant }}</mat-label>
+      <mat-select [(ngModel)]="config.tenantId" required>
+        <mat-option *ngFor="let tenant of tenants" [value]="tenant.id">
+          {{ tenant.name }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <!-- Provider Type -->
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>{{ terms.providerType }}</mat-label>
+      <mat-select [(ngModel)]="config.providerType" [compareWith]="compareById" required>
+        <mat-option *ngFor="let type of providerTypes" [value]="type">
+          {{ type.caption }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <!-- Instance ID -->
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>{{ terms.instanceId }}</mat-label>
+      <input matInput [(ngModel)]="config.instanceId" required placeholder="1234567890">
+    </mat-form-field>
+
+    <!-- API Token -->
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>{{ terms.apiToken }}</mat-label>
+      <input matInput [(ngModel)]="config.apiToken" type="password" required>
+    </mat-form-field>
+
+    <!-- Phone Number -->
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>{{ terms.phoneNumber }}</mat-label>
+      <input matInput [(ngModel)]="config.phoneNumber" placeholder="972501234567">
+    </mat-form-field>
+
+    <!-- Display Name -->
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>{{ terms.displayName }}</mat-label>
+      <input matInput [(ngModel)]="config.displayName" placeholder="מכירות / תמיכה">
+    </mat-form-field>
+
+    <!-- Toggles -->
+    <div class="toggles">
+      <mat-slide-toggle [(ngModel)]="config.isActive">
+        {{ terms.isActive }}
+      </mat-slide-toggle>
+
+      <mat-slide-toggle [(ngModel)]="config.isDefault">
+        {{ terms.isDefault }}
+      </mat-slide-toggle>
+    </div>
+
+    <!-- Connection Status -->
+    <div class="connection-status" *ngIf="connectionStatus !== null && !isNew">
+      <span class="status-label">סטטוס חיבור:</span>
+      <span [class.connected]="connectionStatus.connected" [class.disconnected]="!connectionStatus.connected">
+        {{ connectionStatus.connected ? '🟢 מחובר' : '🔴 לא מחובר' }}
+        {{ connectionStatus.phone ? '(' + connectionStatus.phone + ')' : '' }}
+      </span>
+      <button mat-icon-button (click)="checkConnection()" title="בדיקה מחדש">
+        <mat-icon>refresh</mat-icon>
+      </button>
+    </div>
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="close()">{{ terms.cancel }}</button>
+  <button mat-raised-button color="primary" (click)="save()">{{ terms.ok }}</button>
+</mat-dialog-actions>

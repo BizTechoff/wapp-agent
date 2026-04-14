@@ -1,0 +1,46 @@
+<app-base-table
+  [title]="terms.providers"
+  [data]="providers"
+  [entityType]="ProviderConfig"
+  [loading]="loading"
+  [totalRecords]="providers.length"
+  [showPagination]="false"
+  [addButtonText]="terms.addProvider"
+  [hiddenColumns]="['id', 'apiToken', 'createDate', 'tenant']"
+  [showCustomAction]="true"
+  customActionIcon="star"
+  customActionTitle="הגדר כברירת מחדל"
+  (onAdd)="addProvider()"
+  (onEdit)="editProvider($event)"
+  (onDelete)="deleteProvider($event)"
+  (onCustomAction)="setAsDefault($event)"
+  (onRefresh)="loadProviders()">
+
+  <ng-template appTableColumn field="tenantId" header="לקוח" let-row>
+    {{ row.tenant?.name }}
+  </ng-template>
+
+  <ng-template appTableColumn field="providerType" header="ספק" let-row>
+    {{ row.providerType?.caption }}
+  </ng-template>
+
+  <ng-template appTableColumn field="isActive" header="פעיל" let-row>
+    <span [class.active]="row.isActive" [class.inactive]="!row.isActive">
+      {{ row.isActive ? '✓' : '✗' }}
+    </span>
+  </ng-template>
+
+  <ng-template appTableColumn field="isDefault" header="ברירת מחדל" let-row>
+    <span [class.default]="row.isDefault">
+      {{ row.isDefault ? '★' : '' }}
+    </span>
+  </ng-template>
+
+  <ng-template appTableColumn field="status" header="חיבור" let-row>
+    <span [class.connected]="getStatus(row.id)?.connected" [class.disconnected]="!getStatus(row.id)?.connected">
+      {{ getStatus(row.id)?.connected ? '🟢' : '🔴' }}
+      {{ getStatus(row.id)?.phone || '' }}
+    </span>
+  </ng-template>
+
+</app-base-table>

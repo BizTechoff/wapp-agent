@@ -1,0 +1,90 @@
+.details-container {
+  min-width: 400px;
+}
+
+.detail-row {
+  display: flex;
+  margin-bottom: 12px;
+  align-items: baseline;
+
+  .label {
+    font-weight: 500;
+    color: #666;
+    min-width: 120px;
+  }
+
+  .value {
+    flex: 1;
+
+    &.mobile {
+      font-family: monospace;
+      font-size: 16px;
+      font-weight: 500;
+    }
+
+    &.code {
+      font-family: monospace;
+      font-size: 12px;
+      background: #f5f5f5;
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+
+    &.error {
+      color: #f44336;
+    }
+
+    &.link {
+      color: #1976d2;
+      text-decoration: none;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+}
+
+.message-text {
+  background: #f5f5f5;
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.timestamps {
+  background: #fafafa;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+
+  .detail-row {
+    margin-bottom: 8px;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+}
+
+.callback-info {
+  border-top: 1px solid #e0e0e0;
+  padding-top: 16px;
+  margin-top: 16px;
+}
+
+.status-success {
+  color: #4caf50;
+}
+
+.status-failed {
+  color: #f44336;
+}
+
+.status-pending {
+  color: #ff9800;
+}

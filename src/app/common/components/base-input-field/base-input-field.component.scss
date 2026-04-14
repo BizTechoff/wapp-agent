@@ -1,0 +1,82 @@
+@import '../../../../styles/variables';
+
+.base-input-field {
+  position: relative;
+  margin-bottom: 0;
+  width: 100%;
+
+  label {
+    position: absolute;
+    right: 12px;
+    top: 16px;
+    font-size: 16px;
+    color: $text-secondary;
+    transition: all 0.2s ease-out;
+    pointer-events: none;
+    background: $bg-white;
+    padding: 0 4px;
+    transform-origin: top right;
+
+    &.floating {
+      top: -8px;
+      font-size: 12px;
+      color: $primary-color;
+    }
+
+    .required-marker {
+      color: $error-color;
+    }
+  }
+
+  input, select, textarea {
+    width: 100%;
+    padding: 16px 12px;
+    font-size: 16px;
+    border: 1px solid $border-light;
+    border-radius: 4px;
+    outline: none;
+    transition: border-color 0.2s ease-out;
+    background: transparent;
+    box-sizing: border-box;
+    font-family: inherit;
+
+    &:focus {
+      border-color: $primary-color;
+      border-width: 2px;
+      padding: 15px 11px; // Compensate for thicker border
+    }
+
+    &:disabled {
+      background-color: $bg-light;
+      cursor: not-allowed;
+      color: $text-muted;
+    }
+  }
+
+  textarea {
+    resize: none;
+    overflow: hidden;
+    line-height: 1.5;
+    direction: rtl;
+    text-align: right;
+  }
+
+  select {
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: left 12px center;
+    padding-left: 32px;
+    cursor: pointer;
+    direction: rtl;
+  }
+
+  &.focused label {
+    color: $primary-color;
+  }
+
+  &.has-value label {
+    // Ensure label stays floating even when not focused
+  }
+}

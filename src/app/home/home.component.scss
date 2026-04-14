@@ -1,0 +1,151 @@
+@import '../../styles/variables';
+
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  padding: 20px;
+  background: linear-gradient(135deg, $bg-light 0%, lighten($primary-light, 30%) 100%);
+  overflow: hidden;
+  box-sizing: border-box;
+  position: relative;
+}
+
+.logo-link {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  cursor: pointer;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 15px;
+
+  &:hover {
+    transform: scale(1.15);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  }
+}
+
+.login-logo {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.login-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 25px;
+  max-width: 550px;
+  width: 100%;
+}
+
+mat-card {
+  width: 100%;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+
+  mat-card-header {
+    margin-bottom: 20px;
+
+    mat-card-title {
+      font-size: 24px;
+      font-weight: 500;
+      color: $text-primary;
+      text-align: center;
+    }
+  }
+
+  mat-card-content {
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+  }
+}
+
+.button-row {
+  display: flex;
+  justify-content: center;
+  margin-top: 8px;
+
+  button {
+    min-width: 200px;
+    height: 45px;
+    font-size: 16px;
+    font-weight: 500;
+    background: $add-button-bg;
+    color: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s;
+
+    &:hover {
+      background: $add-button-bg-hover;
+      box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+      transform: translateY(-1px);
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .login-container {
+    padding: 20px 15px;
+  }
+
+  .logo-link {
+    width: 120px;
+    height: 120px;
+    top: 15px;
+    right: 15px;
+    padding: 12px;
+  }
+
+  .login-card {
+    gap: 20px;
+    max-width: 450px;
+  }
+}
+
+@media (max-width: 500px) {
+  .login-container {
+    padding: 15px 10px;
+  }
+
+  .logo-link {
+    width: 100px;
+    height: 100px;
+    top: 10px;
+    right: 10px;
+    padding: 10px;
+  }
+
+  .login-card {
+    gap: 15px;
+  }
+
+  mat-card {
+    padding: 16px;
+
+    mat-card-title {
+      font-size: 20px;
+    }
+  }
+
+  .button-row button {
+    min-width: 150px;
+    height: 40px;
+    font-size: 14px;
+  }
+}

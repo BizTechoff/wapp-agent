@@ -1,0 +1,63 @@
+<h2 mat-dialog-title>{{ isNew ? terms.addTenant : tenant?.name }}</h2>
+
+<mat-dialog-content>
+  <div class="form-container" *ngIf="tenant">
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>{{ terms.tenantName }}</mat-label>
+      <input matInput [(ngModel)]="tenant.name" required>
+    </mat-form-field>
+
+    <div class="api-key-section">
+      <mat-form-field appearance="outline" class="api-key-field">
+        <mat-label>{{ terms.apiKey }}</mat-label>
+        <input matInput [(ngModel)]="tenant.apiKey" readonly>
+      </mat-form-field>
+      <button mat-icon-button (click)="copyApiKey()" title="העתק">
+        <mat-icon>content_copy</mat-icon>
+      </button>
+      <button mat-icon-button (click)="generateApiKey()" title="יצירת מפתח חדש">
+        <mat-icon>refresh</mat-icon>
+      </button>
+    </div>
+
+    <div class="row">
+      <mat-form-field appearance="outline">
+        <mat-label>{{ terms.messageQuota }}</mat-label>
+        <input matInput type="number" [(ngModel)]="tenant.messageQuota">
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>{{ terms.messagesSent }}</mat-label>
+        <input matInput type="number" [(ngModel)]="tenant.messagesSent" readonly>
+      </mat-form-field>
+
+      <button mat-icon-button (click)="resetMessageCount()" title="איפוס" *ngIf="!isNew">
+        <mat-icon>restart_alt</mat-icon>
+      </button>
+    </div>
+
+    <div class="toggles">
+      <mat-slide-toggle [(ngModel)]="tenant.isActive">
+        {{ terms.isActive }}
+      </mat-slide-toggle>
+
+      <mat-slide-toggle [(ngModel)]="tenant.canSend">
+        {{ terms.canSend }}
+      </mat-slide-toggle>
+
+      <mat-slide-toggle [(ngModel)]="tenant.canReceive">
+        {{ terms.canReceive }}
+      </mat-slide-toggle>
+    </div>
+
+    <mat-form-field appearance="outline" class="full-width" *ngIf="tenant.canReceive">
+      <mat-label>{{ terms.incomingWebhookUrl }}</mat-label>
+      <input matInput [(ngModel)]="tenant.incomingWebhookUrl" placeholder="https://your-app.com/webhook">
+    </mat-form-field>
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="close()">{{ terms.cancel }}</button>
+  <button mat-raised-button color="primary" (click)="save()">{{ terms.ok }}</button>
+</mat-dialog-actions>

@@ -1,0 +1,19 @@
+@import '../../../../styles/variables';
+
+.yes-no-dialog {
+  min-width: 300px;
+  padding: 20px;
+
+  h2 {
+    margin: 0 0 24px 0;
+    font-size: 20px;
+    font-weight: 500;
+    color: $text-primary;
+  }
+
+  mat-dialog-actions {
+    gap: 12px;
+    padding: 0;
+    margin-top: 24px;
+  }
+}

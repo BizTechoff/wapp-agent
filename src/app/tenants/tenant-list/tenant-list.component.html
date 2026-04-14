@@ -1,0 +1,37 @@
+<app-base-table
+  [title]="terms.tenants"
+  [data]="tenants"
+  [entityType]="Tenant"
+  [loading]="loading"
+  [totalRecords]="tenants.length"
+  [showPagination]="false"
+  [addButtonText]="terms.addTenant"
+  [hiddenColumns]="['id', 'apiKey', 'incomingWebhookUrl']"
+  (onAdd)="addTenant()"
+  (onEdit)="editTenant($event)"
+  (onDelete)="deleteTenant($event)"
+  (onRefresh)="loadTenants()">
+
+  <ng-template appTableColumn field="isActive" header="פעיל" let-row>
+    <span [class.active]="row.isActive" [class.inactive]="!row.isActive">
+      {{ row.isActive ? '✓' : '✗' }}
+    </span>
+  </ng-template>
+
+  <ng-template appTableColumn field="canSend" header="שליחה" let-row>
+    <span [class.active]="row.canSend" [class.inactive]="!row.canSend">
+      {{ row.canSend ? '✓' : '✗' }}
+    </span>
+  </ng-template>
+
+  <ng-template appTableColumn field="canReceive" header="קבלה" let-row>
+    <span [class.active]="row.canReceive" [class.inactive]="!row.canReceive">
+      {{ row.canReceive ? '✓' : '✗' }}
+    </span>
+  </ng-template>
+
+  <ng-template appTableColumn field="messagesSent" header="נשלחו" let-row>
+    {{ row.messagesSent }} / {{ row.messageQuota }}
+  </ng-template>
+
+</app-base-table>

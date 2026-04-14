@@ -1,0 +1,61 @@
+<div class="dashboard-container">
+  <div class="dashboard-header">
+    <h1>{{ terms.dashboard }}</h1>
+    <span class="live-indicator">
+      <span class="live-dot"></span>
+      {{ terms.live }}
+    </span>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="stats-grid">
+    <div class="stat-card total">
+      <div class="stat-icon">📤</div>
+      <div class="stat-value">{{ totalMessages }}</div>
+      <div class="stat-label">{{ terms.totalMessages }}</div>
+    </div>
+
+    <div class="stat-card delivered">
+      <div class="stat-icon">✅</div>
+      <div class="stat-value">{{ deliveredCount + readCount }}</div>
+      <div class="stat-label">{{ terms.delivered }}</div>
+    </div>
+
+    <div class="stat-card pending">
+      <div class="stat-icon">⏳</div>
+      <div class="stat-value">{{ pendingCount }}</div>
+      <div class="stat-label">{{ terms.pending }}</div>
+    </div>
+
+    <div class="stat-card failed">
+      <div class="stat-icon">❌</div>
+      <div class="stat-value">{{ failedCount }}</div>
+      <div class="stat-label">{{ terms.failed }}</div>
+    </div>
+  </div>
+
+  <!-- Success Rate Bar -->
+  <div class="success-rate-container">
+    <div class="success-rate-bar">
+      <div class="success-rate-fill" [style.width.%]="successRate"></div>
+    </div>
+    <span class="success-rate-text">{{ successRate }}% {{ terms.successRate }}</span>
+  </div>
+
+  <!-- Recent Failures -->
+  <div class="recent-failures" *ngIf="recentFailures.length > 0">
+    <h3>🔴 {{ terms.recentFailures }}</h3>
+    <div class="failure-list">
+      <div class="failure-item" *ngFor="let msg of recentFailures">
+        <span class="failure-mobile">{{ msg.mobile }}</span>
+        <span class="failure-error">{{ msg.errorMessage }}</span>
+        <span class="failure-time">{{ getTimeAgo(msg.createDate) }}</span>
+      </div>
+    </div>
+  </div>
+
+  <button mat-raised-button color="primary" (click)="refresh()" class="refresh-btn">
+    <mat-icon>refresh</mat-icon>
+    {{ terms.refresh }}
+  </button>
+</div>
