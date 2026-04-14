@@ -99,24 +99,26 @@ export async function handleGreenApiWebhook(body: any): Promise<void> {
 
       // Extract text/media based on message type
       const messageData = body.messageData
-      if (messageData?.textMessageData) {
-        incoming.text = messageData.textMessageData.textMessage || ''
-        incoming.messageType = MessageType.text
-      } else if (messageData?.extendedTextMessageData) {
-        incoming.text = messageData.extendedTextMessageData.text || ''
-        incoming.messageType = MessageType.text
-      } else if (messageData?.imageMessage) {
-        incoming.mediaUrl = messageData.imageMessage.downloadUrl || ''
-        incoming.messageType = MessageType.image
-      } else if (messageData?.videoMessage) {
-        incoming.mediaUrl = messageData.videoMessage.downloadUrl || ''
-        incoming.messageType = MessageType.video
-      } else if (messageData?.audioMessage) {
-        incoming.mediaUrl = messageData.audioMessage.downloadUrl || ''
-        incoming.messageType = MessageType.audio
-      } else if (messageData?.documentMessage) {
-        incoming.mediaUrl = messageData.documentMessage.downloadUrl || ''
-        incoming.messageType = MessageType.document
+      const typeMessage = messageData?.typeMessage
+
+      // Set message type using the mapping function
+      incoming.messageType = mapMessageType(typeMessage)
+
+      // Extract content based on type
+      if (typeMessage === 'textMessage') {
+        incoming.text = messageData.textMessageData?.textMessage || ''
+      } else if (typeMessage === 'extendedTextMessage') {
+        incoming.text = messageData.extendedTextMessageData?.text || ''
+      } else if (messageData?.fileMessageData) {
+        // All file-based messages (image, video, audio, document)
+        incoming.mediaUrl = messageData.fileMessageData.downloadUrl || ''
+        incoming.text = messageData.fileMessageData.caption || ''
+      } else if (typeMessage === 'locationMessage') {
+        const loc = messageData.locationMessageData
+        incoming.text = `מיקום: ${loc?.latitude}, ${loc?.longitude}`
+      } else if (typeMessage === 'contactMessage') {
+        const contact = messageData.contactMessageData
+        incoming.text = `איש קשר: ${contact?.displayName || ''}`
       }
 
       await incoming.save()  // LiveQuery auto-push!
