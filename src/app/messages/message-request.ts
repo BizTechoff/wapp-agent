@@ -7,6 +7,7 @@ import { ProviderType } from '../../shared/enums/ProviderType'
 @Entity<MessageRequest>('message-requests', {
   allowApiCrud: true,
   defaultOrderBy: { createDate: 'desc' },
+  // Note: For performance, create DB index: CREATE INDEX idx_daily_limit ON message_requests(tenant_id, mobile, create_date)
   saving: async (message) => {
     if (isBackend()) {
       if (message._.isNew()) {
