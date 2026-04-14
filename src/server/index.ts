@@ -32,6 +32,11 @@ async function startup() {
     })
   )
 
+  // Remult API (mounted on /api)
+  app.use(api)
+  // Note: withRemult provides context for async operations outside request cycle
+  app.use(api.withRemult)
+
   // Explicit send endpoint (before Remult)
   app.post('/api/send', async (req, res) => {
     console.log('=== /api/send called ===', req.body)
@@ -59,10 +64,6 @@ async function startup() {
       }
     })
   })
-
-  // Remult API (mounted on /api)
-  app.use(api)
-  // Note: withRemult provides context for async operations outside request cycle
 
   // Serve Angular app
   let dist = path.resolve('dist/wapp-agent/browser')
