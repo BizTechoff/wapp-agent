@@ -40,17 +40,18 @@ async function startup() {
   // Green-API Webhook endpoint (must be before Remult API)
   app.post('/api/wapp/received', (req, res) => {
     console.log('=== WEBHOOK RECEIVED ===')
-    console.log('Headers:', JSON.stringify(req.headers))
     console.log('Body:', JSON.stringify(req.body))
     res.status(200).send('OK')
 
-    // Step 2: Process asynchronously
-    setImmediate(async () => {
-      try {
-        await handleGreenApiWebhook(req.body)
-      } catch (error) {
-        console.error('Webhook processing error:', error)
-      }
+    // Process asynchronously with Remult context
+    setImmediate(() => {
+      api.withRemult({} as any, {} as any, async () => {
+        try {
+          await handleGreenApiWebhook(req.body)
+        } catch (error) {
+          console.error('Webhook processing error:', error)
+        }
+      })
     })
   })
 
