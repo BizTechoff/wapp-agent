@@ -6,6 +6,7 @@ import { ProviderConfig } from '../../app/providers/provider-config'
 import { MessageStatus } from '../enums/MessageStatus'
 import { FairMessageQueueService } from '../services/fair-queue.service'
 import { ProviderResponse, SendTextRequest, SendFileRequest } from '../providers/provider.interface'
+import { config } from '../config'
 
 @Controller('messages')
 export class MessagesController {
@@ -16,6 +17,8 @@ export class MessagesController {
 
   @BackendMethod({ allowed: true })
   static async sendMessage(request: ApiSendRequest): Promise<ApiSendResponse> {
+    console.log('=== sendMessage called ===', { mobile: request.mobile, hasApiKey: !!request.apiKey })
+
     // 1. Validate API key
     const tenant = await MessagesController.validateApiKey(request.apiKey)
     if (!tenant) {
