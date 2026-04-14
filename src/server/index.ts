@@ -60,9 +60,9 @@ async function startup() {
     })
   })
 
-  // Remult API
+  // Remult API (mounted on /api)
   app.use(api)
-  app.use(api.withRemult)
+  // Note: withRemult provides context for async operations outside request cycle
 
   // Serve Angular app
   let dist = path.resolve('dist/wapp-agent/browser')
